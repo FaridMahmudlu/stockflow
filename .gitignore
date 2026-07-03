@@ -1,0 +1,33 @@
+# ── Dependencies ──
+node_modules/
+
+# ── Environment ──
+.env
+.env.local
+.env.*.local
+
+# ── Build ──
+dist/
+backend/dist/
+backend/generated/
+mobile/.expo/
+
+# ── IDE / OS ──
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# ── Logs ──
+*.log
+npm-debug.log*
+
+# ── Firebase ──
+**/firebase-service-account*.json
+**/google-services.json
+**/GoogleService-Info.plist
+
+# ── Agent / AI Configs ──
+AGENTS.md
+.agents/

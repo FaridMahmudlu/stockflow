@@ -1,0 +1,24 @@
+# ── Dependencies ──
+node_modules/
+dist/
+generated/
+
+# ── Environment ──
+.env
+.env.local
+.env.*.local
+
+# ── IDE / OS ──
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# ── Prisma ──
+prisma/migrations/**/migration_lock.toml
+
+# ── Logs ──
+*.log
+npm-debug.log*

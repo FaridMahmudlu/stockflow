@@ -1,0 +1,205 @@
+// Supply Changer — Prisma Schema
+// Phase 1: Full data model per SPEC.md Section 7
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enums ────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  WORKER
+}
+
+enum MovementType {
+  INCREASE
+  DECREASE
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum NotificationType {
+  STOCK_LOW
+  STOCK_CRITICAL
+  STOCK_INCREASED
+  STOCK_DECREASED
+  SUPPLIER_CREATED
+  SUPPLIER_UPDATED
+  SUPPLIER_CHANGED
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_DELETED
+  USER_CREATED
+  USER_UPDATED
+  ROLE_CHANGED
+  GENERAL
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ROLE_CHANGE
+  LOGIN
+  LOGOUT
+}
+
+// ── Models ───────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(WORKER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deviceTokens       DeviceToken[]
+  stockMovements     StockMovement[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  refreshTokens      RefreshToken[]
+  productAssignments ProductAssignment[]
+
+  @@map("users")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  sku           String   @unique
+  stock         Int      @default(0)
+  minimumStock  Int      @default(0)
+  category      String?
+  brand         String?
+  unit          String?  @default("ədəd (pcs)")
+  model         String?
+  location      String?
+  purchasePrice Float?
+  salePrice     Float?
+  description   String?
+  supplierId    String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
+  stockMovements StockMovement[]
+  assignments    ProductAssignment[]
+
+  @@index([supplierId])
+  @@map("products")
+}
+
+model ProductAssignment {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@map("product_assignments")
+}
+
+model StockMovement {
+  id                String       @id @default(uuid())
+  productId         String
+  userId            String
+  type              MovementType
+  quantity          Int
+  oldStock          Int
+  newStock          Int
+  description       String?
+  relatedMovementId String?      @unique
+  createdAt         DateTime     @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@map("stock_movements")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?
+  action     AuditAction
+  entityType String
+  entityId   String
+  oldData    Json?
+  newData    Json?
+  createdAt  DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
