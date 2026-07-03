@@ -14,81 +14,98 @@ const TEXT_ACTIVE = '#ffffff';
 const TEXT_INACTIVE = '#94a3b8';
 
 export function CustomTabBar({ state, descriptors, navigation }: any) {
-  // Hide product detail page from tabs
-  const visibleRoutes = state.routes.filter((route: any) => !route.name.includes('product/'));
+  // Hide product detail page and other screens with href === null
+  const visibleRoutes = state.routes.filter((route: any) => {
+    if (route.name.includes('product/')) return false;
+    if (route.name === 'notifications') return false;
+    const options = descriptors[route.key]?.options;
+    return options?.href !== null;
+  });
+
+  const leftRoutes = visibleRoutes.filter((r: any) => r.name === 'index' || r.name === 'products');
+  const centerRoute = visibleRoutes.find((r: any) => r.name === 'stock/index');
+  const rightRoutes = visibleRoutes.filter((r: any) => r.name !== 'index' && r.name !== 'products' && r.name !== 'stock/index');
+
+  const renderItem = (route: any) => {
+    const options = descriptors[route.key].options as any;
+    const isFocused = state.index === state.routes.findIndex((r: any) => r.key === route.key);
+
+    const onPress = () => {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+
+      if (!isFocused && !event.defaultPrevented) {
+        navigation.navigate(route.name, route.params);
+      }
+    };
+
+    const onLongPress = () => {
+      navigation.emit({
+        type: 'tabLongPress',
+        target: route.key,
+      });
+    };
+
+    const label =
+      options.tabBarLabel !== undefined
+        ? options.tabBarLabel
+        : options.title !== undefined
+        ? options.title
+        : route.name;
+
+    let iconName: IconName = 'home';
+    if (route.name === 'index') iconName = 'home';
+    if (route.name === 'products') iconName = 'cube';
+    if (route.name === 'stock/index') iconName = 'swap-vertical';
+    if (route.name === 'suppliers') iconName = 'business';
+    if (route.name === 'notifications') iconName = 'notifications';
+    if (route.name === 'profile') iconName = 'person';
+
+    if (route.name === 'stock/index') {
+      return (
+        <CenterButton
+          key={route.key}
+          isFocused={isFocused}
+          onPress={onPress}
+          onLongPress={onLongPress}
+          iconName={iconName}
+          label={label as string}
+        />
+      );
+    }
+
+    return (
+      <TabBarItem
+        key={route.key}
+        routeName={route.name}
+        label={label as string}
+        iconName={iconName}
+        isFocused={isFocused}
+        onPress={onPress}
+        onLongPress={onLongPress}
+        badgeCount={options.tabBarBadge as number | undefined}
+      />
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {visibleRoutes.map((route: any, index: number) => {
-          const options = descriptors[route.key].options as any;
-          
-          if (options.href === null) {
-            return null;
-          }
+        {/* Left Side Items */}
+        <View style={styles.sideGroup}>
+          {leftRoutes.map(renderItem)}
+        </View>
 
-          const isFocused = state.index === state.routes.findIndex((r: any) => r.key === route.key);
+        {/* Center Stock Button */}
+        {centerRoute && renderItem(centerRoute)}
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
-            }
-          };
-
-          const onLongPress = () => {
-            navigation.emit({
-              type: 'tabLongPress',
-              target: route.key,
-            });
-          };
-
-          const label =
-            options.tabBarLabel !== undefined
-              ? options.tabBarLabel
-              : options.title !== undefined
-              ? options.title
-              : route.name;
-
-          let iconName: IconName = 'home';
-          if (route.name === 'index') iconName = 'home';
-          if (route.name === 'products') iconName = 'cube';
-          if (route.name === 'stock/index') iconName = 'swap-vertical';
-          if (route.name === 'suppliers') iconName = 'business';
-          if (route.name === 'notifications') iconName = 'notifications';
-          if (route.name === 'profile') iconName = 'person';
-
-          if (route.name === 'stock/index') {
-            return (
-              <CenterButton
-                key={route.key}
-                isFocused={isFocused}
-                onPress={onPress}
-                onLongPress={onLongPress}
-                iconName={iconName}
-                label={label as string}
-              />
-            );
-          }
-
-          return (
-            <TabBarItem
-              key={route.key}
-              routeName={route.name}
-              label={label as string}
-              iconName={iconName}
-              isFocused={isFocused}
-              onPress={onPress}
-              onLongPress={onLongPress}
-              badgeCount={options.tabBarBadge as number | undefined}
-            />
-          );
-        })}
+        {/* Right Side Items */}
+        <View style={styles.sideGroup}>
+          {rightRoutes.map(renderItem)}
+        </View>
       </View>
       <View style={styles.homeIndicator} />
     </View>
@@ -133,7 +150,7 @@ const CenterButton = ({ isFocused, onPress, onLongPress, iconName, label }: any)
           </Animated.View>
         </View>
       </Pressable>
-      <Text style={styles.centerLabel}>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={styles.centerLabel}>
         {label}
       </Text>
     </View>
@@ -244,7 +261,12 @@ const TabBarItem = React.memo(({ routeName, label, iconName, isFocused, onPress,
           ) : null}
         </View>
 
-        <Text style={[styles.label, { color: isFocused ? TEXT_ACTIVE : TEXT_INACTIVE }]}>
+        <Text 
+          numberOfLines={1} 
+          adjustsFontSizeToFit 
+          minimumFontScale={0.8}
+          style={[styles.label, { color: isFocused ? TEXT_ACTIVE : TEXT_INACTIVE }]}
+        >
           {label}
         </Text>
       </Animated.View>
@@ -299,10 +321,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 6,
+    paddingHorizontal: 2,
     borderRadius: 24,
-    minWidth: 50,
+    minWidth: 45,
     height: 56,
+  },
+  sideGroup: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    height: '100%',
   },
   iconContainer: {
     position: 'relative',
@@ -350,7 +379,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   centerButtonWrapper: {
-    flex: 1.2,
+    flex: 0.75,
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',

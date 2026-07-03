@@ -178,11 +178,22 @@ export class NotificationsService {
 
   // --- EVENT LISTENERS ---
 
+  private async getUserName(userId?: string): Promise<string> {
+    if (!userId) return 'Sistem';
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      return user ? (user.fullName || user.email.split('@')[0]) : 'Sistem';
+    } catch {
+      return 'Sistem';
+    }
+  }
+
   @OnEvent('stock.critical')
   async handleStockCritical(payload: any) {
-    const { product } = payload;
+    const { product, movement } = payload;
+    const userName = await this.getUserName(movement?.userId);
     const title = '🚨 Kritik Vəziyyət!';
-    const message = `${product.name} məhsulu anbarımızda tamamilə bitdi! Təcili sifariş verilməlidir. 📉`;
+    const message = `${userName} tərəfindən edilən əməliyyat nəticəsində "${product.name}" (SKU: ${product.sku}) məhsulu anbarda tamamilə bitdi! 📉`;
     
     await this.notifyAllActiveUsers('STOCK_CRITICAL' as NotificationType, title, message);
     this.gateway.sendStockUpdate(product.id, product.stock);
@@ -190,9 +201,10 @@ export class NotificationsService {
 
   @OnEvent('stock.low')
   async handleStockLow(payload: any) {
-    const { product } = payload;
+    const { product, movement } = payload;
+    const userName = await this.getUserName(movement?.userId);
     const title = '⚠️ Stok Tükənir!';
-    const message = `${product.name} məhsulu minimum həddə çatdı. Anbarda cəmi ${product.stock} ədəd qalıb. 🛒`;
+    const message = `${userName} tərəfindən edilən əməliyyatdan sonra "${product.name}" (SKU: ${product.sku}) məhsulunun sayı minimum həddə çatdı. Cari qalıq: ${product.stock} ədəd (Limit: ${product.minimumStock} ədəd). 🛒`;
     
     await this.notifyAllActiveUsers('STOCK_LOW' as NotificationType, title, message);
     this.gateway.sendStockUpdate(product.id, product.stock);
@@ -201,8 +213,9 @@ export class NotificationsService {
   @OnEvent('stock.decreased')
   async handleStockDecreased(payload: any) {
     const { product, movement } = payload;
+    const userName = await this.getUserName(movement?.userId);
     const title = '📤 Stok Çıxışı';
-    const message = `${product.name} məhsulundan ${movement.quantity} ədəd anbarımızdan çıxdı. 👇`;
+    const message = `${userName} tərəfindən "${product.name}" (SKU: ${product.sku}) məhsulundan ${movement.quantity} ədəd çıxarıldı. Qalıq: ${movement.oldStock} ➔ ${movement.newStock} ədəd. 👇`;
     await this.notifyAllActiveUsers('STOCK_DECREASED' as NotificationType, title, message);
     this.gateway.sendStockUpdate(product.id, product.stock);
   }
@@ -210,52 +223,64 @@ export class NotificationsService {
   @OnEvent('stock.increased')
   async handleStockIncreased(payload: any) {
     const { product, movement } = payload;
+    const userName = await this.getUserName(movement?.userId);
     const title = '🚀 Yeni Stok Gəldi!';
-    const message = `${product.name} məhsulundan ${movement.quantity} ədəd anbara daxil oldu. 📦`;
+    const message = `${userName} tərəfindən "${product.name}" (SKU: ${product.sku}) məhsulundan ${movement.quantity} ədəd daxil edildi. Qalıq: ${movement.oldStock} ➔ ${movement.newStock} ədəd. 📦`;
     await this.notifyAllActiveUsers('STOCK_INCREASED' as NotificationType, title, message);
     this.gateway.sendStockUpdate(product.id, product.stock);
   }
 
   @OnEvent('supplier.created')
   async handleSupplierCreated(payload: any) {
+    const supplier = payload.supplier || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '🤝 Yeni Əməkdaşlıq!';
-    const message = `${payload.name} şirkəti ilə yeni əməkdaşlığa başladıq. 🎉`;
+    const message = `${userName} tərəfindən "${supplier.name}" şirkəti ilə yeni təchizatçı əməkdaşlığı başladıldı. 🎉`;
     await this.notifyAllActiveUsers('SUPPLIER_CREATED' as NotificationType, title, message);
   }
 
   @OnEvent('supplier.updated')
   async handleSupplierUpdated(payload: any) {
+    const supplier = payload.supplier || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '📋 Təchizatçı Yeniləndi';
-    const message = `${payload.name} şirkətinin məlumatları dəyişdirildi.`;
+    const message = `${userName} tərəfindən "${supplier.name}" təchizatçısının məlumatları redaktə olundu. 📝`;
     await this.notifyAllActiveUsers('SUPPLIER_UPDATED' as NotificationType, title, message);
   }
 
   @OnEvent('supplier.deleted')
   async handleSupplierDeleted(payload: any) {
+    const supplier = payload.supplier || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '❌ Təchizatçı Silindi';
-    const message = `${payload.name} təchizatçısı sistemdən çıxarıldı.`;
-    // We don't have SUPPLIER_DELETED, using SUPPLIER_CHANGED or GENERAL
+    const message = `${userName} tərəfindən "${supplier.name}" təchizatçısı sistemdən silindi.`;
     await this.notifyAllActiveUsers('GENERAL' as NotificationType, title, message);
   }
 
   @OnEvent('product.created')
   async handleProductCreated(payload: any) {
+    const product = payload.product || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '✨ Yeni Məhsul!';
-    const message = `${payload.name} adlı məhsul sistemimizə əlavə edildi. 🆕`;
+    const message = `${userName} tərəfindən "${product.name}" (SKU: ${product.sku}) adlı məhsul sistemə əlavə edildi. 🆕`;
     await this.notifyAllActiveUsers('PRODUCT_CREATED' as NotificationType, title, message);
   }
 
   @OnEvent('product.updated')
   async handleProductUpdated(payload: any) {
+    const product = payload.product || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '✏️ Məhsul Yeniləndi';
-    const message = `${payload.name} məhsulu haqqında məlumatlar redaktə olundu. 📝`;
+    const message = `${userName} tərəfindən "${product.name}" (SKU: ${product.sku}) məhsulu haqqında məlumatlar redaktə olundu. 📝`;
     await this.notifyAllActiveUsers('PRODUCT_UPDATED' as NotificationType, title, message);
   }
 
   @OnEvent('product.deleted')
   async handleProductDeleted(payload: any) {
+    const product = payload.product || payload;
+    const userName = await this.getUserName(payload.userId);
     const title = '🗑️ Məhsul Silindi';
-    const message = `${payload.name} məhsulu anbar siyahısından silindi.`;
+    const message = `${userName} tərəfindən "${product.name}" məhsulu anbardan silindi.`;
     await this.notifyAllActiveUsers('PRODUCT_DELETED' as NotificationType, title, message);
   }
 }

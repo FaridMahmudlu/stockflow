@@ -44,7 +44,7 @@ export class ProductsService {
         },
       });
 
-      this.eventEmitter.emit('product.created', product);
+      this.eventEmitter.emit('product.created', { product, userId: adminId });
 
       return product;
     });
@@ -131,7 +131,7 @@ export class ProductsService {
         },
       });
 
-      this.eventEmitter.emit('product.updated', updated);
+      this.eventEmitter.emit('product.updated', { product: updated, userId: adminId });
 
       return updated;
     });
@@ -158,7 +158,7 @@ export class ProductsService {
         },
       });
 
-      this.eventEmitter.emit('product.deleted', updated);
+      this.eventEmitter.emit('product.deleted', { product: updated, userId: adminId });
 
       return { message: 'Product deactivated successfully' };
     });

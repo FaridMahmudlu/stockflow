@@ -29,7 +29,7 @@ export class SuppliersService {
       });
 
       // Emit event for Notification module
-      this.eventEmitter.emit('supplier.created', supplier);
+      this.eventEmitter.emit('supplier.created', { supplier, userId: adminId });
 
       return supplier;
     });
@@ -97,7 +97,7 @@ export class SuppliersService {
       });
 
       // Emit event for Notification module
-      this.eventEmitter.emit('supplier.updated', updated);
+      this.eventEmitter.emit('supplier.updated', { supplier: updated, userId: adminId });
 
       return updated;
     });
@@ -125,7 +125,7 @@ export class SuppliersService {
       });
 
       // Emit event for Notification module
-      this.eventEmitter.emit('supplier.deleted', updated);
+      this.eventEmitter.emit('supplier.deleted', { supplier: updated, userId: adminId });
 
       return { message: 'Supplier deleted successfully' };
     });

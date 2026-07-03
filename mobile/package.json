@@ -43,11 +43,11 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 expo start",
+    "start": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 expo start --android",
-    "ios": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 expo start --ios",
-    "web": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 expo start --web",
+    "android": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --android",
+    "ios": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --ios",
+    "web": "cross-env EXPO_USE_METRO_REQUIRE_CACHE=0 EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK=1 expo start --web",
     "lint": "expo lint"
   },
   "private": true

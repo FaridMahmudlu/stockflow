@@ -10,7 +10,7 @@ describe('StockService', () => {
   let prisma: PrismaService;
   let eventEmitter: EventEmitter2;
 
-  const mockPrisma = {
+  const mockPrisma: any = {
     product: {
       findUnique: jest.fn(),
       update: jest.fn(),
