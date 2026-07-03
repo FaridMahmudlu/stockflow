@@ -1,49 +1,50 @@
-# StockFlow
+# Supply Changer
 
-StockFlow is a modern, enterprise-ready inventory and supply chain management system designed for seamless, atomic stock control. The platform consists of a progressive NestJS backend and a highly optimized, high-performance Expo (React Native) mobile application built with premium glassmorphic aesthetics.
-
----
-
-## Key Features
-
-- ⚡ **High Performance List Rendering**: Custom-optimized list rendering using memoized layout calculations (`getItemLayout`), standalone item components, and `useMemo` caching to handle 1000+ products and stock movements smoothly at 60 FPS.
-- 🔒 **Sub-second Atomic Stock Mutations**: Complete transaction-isolated stock adjustments to prevent race conditions and inventory mismatches.
-- 📋 **Audit Log Engine**: Automatic database logging of every stock modification (increase, decrease, transfer) linked to the acting user.
-- 🔔 **Smart Notifications**: Real-time push and local notifications triggered by backend stock thresholds (low stock, critical, system announcements).
-- 🎨 **Premium UI/UX (Glassmorphism)**: Beautiful dark-themed mobile app with glassmorphic cards, custom spring animations (`react-native-reanimated`), and a unified icon system.
-- 🔑 **Role-Based Access Control (RBAC)**: Strict permission layer separating Admin, Manager, and Staff accounts across both API endpoints and mobile UI actions.
+Supply Changer is a modern, enterprise-grade inventory and supply chain management system designed for seamless, atomic stock control and activity tracking. The platform features a high-performance NestJS backend and an elegant, optimized Expo (React Native) mobile application styled with premium glassmorphic aesthetics.
 
 ---
 
-## Technology Stack
+## ⚡ Key Features
+
+- 📱 **Pure-JS Gesture Swipe Navigation**: Native-like horizontal swiping across main tab screens built on React Native's core `<ScrollView>` components for 1000+ items at 60 FPS without binary compilation limitations.
+- 🎨 **Glassmorphism UI/UX**: Dark-themed mobile application with custom blurred panels, background orb highlights, and modern typography.
+- 🔔 **Activity Notifications Logs**: Real-time push and local notifications highlighting specific stock mutations (e.g., who changed what, when, where, and by how much).
+- ⚙️ **Automatic Audit Log Engine**: Transaction-level tracking. Every single stock change (increase, decrease, transfer) triggers an atomic audit log entry linked to the acting user.
+- 🔒 **Sub-second Atomic Mutations**: Core inventory mutations run isolated database transactions to prevent race conditions and stock discrepancies.
+- 🔑 **Role-Based Access Control (RBAC)**: Fine-grained permissions that separate Admin, Manager, and Staff roles across API endpoints and UI elements.
+
+---
+
+## 🛠️ Technology Stack
 
 ### Backend
 - **Framework:** NestJS (Node.js)
 - **Database ORM:** Prisma ORM
 - **Database:** PostgreSQL
 - **Security:** Passport.js, JWT tokens, bcrypt password hashing
+- **Realtime:** Socket.IO for activity and notification broadcasts
 
 ### Mobile
-- **Framework:** Expo SDK 51 / React Native (TypeScript)
+- **Framework:** Expo SDK 56 / React Native (TypeScript)
 - **Navigation:** Expo Router (File-based navigation)
 - **State Management:** Zustand
 - **Animations:** React Native Reanimated (4.x)
-- **Icons:** Feather (via `@expo/vector-icons`)
+- **Design:** Custom Vanilla CSS and React Native StyleSheet
 
 ---
 
-## Repository Structure
+## 📂 Repository Structure
 
 ```
 ├── backend/            # NestJS server, API routes, database schemas, and migration scripts
 ├── mobile/             # Expo React Native mobile application
-├── docs/               # System documentation & API specifications
+├── docs/               # System documentation & specifications (SPEC.md)
 └── README.md           # Project overview and setup guide
 ```
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v18 or newer)
@@ -53,73 +54,78 @@ StockFlow is a modern, enterprise-ready inventory and supply chain management sy
 
 ---
 
-### Backend Setup
+### Backend Installation & Startup
 
 1. Navigate to the `backend` directory:
    ```bash
    cd backend
    ```
-
 2. Install dependencies:
    ```bash
    npm install
    ```
-
-3. Configure your environment variables. Create a `.env` file in the `backend` directory based on `.env.example`:
+3. Create your local environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   *Edit `.env` and fill in your connection string and security details:*
    ```env
    PORT=3000
-   DATABASE_URL="postgresql://username:password@localhost:5432/stockflow"
-   JWT_SECRET="your_secure_jwt_secret"
+   DATABASE_URL="postgresql://username:password@localhost:5432/supplychanger"
+   JWT_SECRET="your_jwt_secret"
    ```
-
 4. Run Prisma database migrations:
    ```bash
    npx prisma migrate dev
    ```
-
-5. Start the backend in development watch mode:
+5. Run DB Seeding to populate initial roles/accounts:
+   ```bash
+   npx prisma db seed
+   ```
+6. Start the server in watch mode:
    ```bash
    npm run start:dev
    ```
 
 ---
 
-### Mobile Setup
+### Mobile Installation & Startup
 
 1. Navigate to the `mobile` directory:
    ```bash
    cd mobile
    ```
-
 2. Install dependencies:
    ```bash
    npm install
    ```
-
-3. Create a `.env` file in the `mobile` directory:
+3. Create your local environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   *Edit `.env` and set your local machine's IP address:*
    ```env
    EXPO_PUBLIC_API_URL=http://<your-local-ip>:3000
    ```
-
 4. Start the Metro packager:
    ```bash
-   npx expo start
+   npm run start
    ```
-
-5. Run on your connected device or emulator:
-   - Press `a` for Android
-   - Press `i` for iOS (if running on macOS)
-
----
-
-## Core Architecture Guidelines
-
-- **Single Source of Truth:** The database is the absolute source of truth for stock quantities. The client mobile application never computes stock math locally; it initiates actions that are processed atomically on the backend server.
-- **Audit Logs:** Under no circumstances should a stock mutation (increase, decrease, transfer) succeed without generating an associated audit log row within the same database transaction.
-- **Component Memoization:** All items rendered within lists (`ProductItem`, `StockMovementItem`, `SupplierItem`, `NotificationItem`) are encapsulated inside `React.memo` to optimize render loops and ensure stutter-free scrolling on mobile devices.
+5. Open the app on your device:
+   - Run on Android emulator: Press `a`
+   - Run on iOS simulator: Press `i`
+   - Load on Expo Go/Pre-built APK: Scan QR code or connect over Metro.
 
 ---
 
-## License
+## 📜 Core Development Guidelines
 
-This project is licensed under the MIT License.
+- **Single Source of Truth:** Stock values are managed entirely on the backend database. Client-side state is purely reflective.
+- **Atomic Operations:** Under no circumstances should stock levels be updated without an associated `AuditLog` created inside the same transaction block.
+- **Memoized Lists:** All lists (`ProductItem`, `StockMovementItem`, `SupplierItem`, `NotificationItem`) are encapsulated inside `React.memo` using defined layouts to ensure buttery-smooth viewport rendering.
+
+---
+
+## 🔒 License
+
+This project is private and all rights are reserved.
