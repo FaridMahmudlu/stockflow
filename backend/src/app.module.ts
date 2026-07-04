@@ -13,6 +13,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     NotificationsModule,
     AuditLogsModule,
   ],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
