@@ -21,5 +21,5 @@ yarn-error.*
 .env*.local
 *.tsbuildinfo
 example
-/ios
-/android
+ios/
+android/
