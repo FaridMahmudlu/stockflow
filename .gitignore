@@ -25,7 +25,6 @@ npm-debug.log*
 
 # ── Firebase ──
 **/firebase-service-account*.json
-**/google-services.json
 **/GoogleService-Info.plist
 
 # ── Agent / AI Configs ──
