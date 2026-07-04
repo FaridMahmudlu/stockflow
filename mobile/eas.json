@@ -17,7 +17,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://stockflow-q2rp.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://stockflow-q2rp.onrender.com",
+        "EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK": "1"
       }
     },
     "production": {}
